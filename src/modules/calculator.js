@@ -1,8 +1,8 @@
 class Calculator {
-    constructor() {
-        this.memory = 0;
-        this.operation = null;
-    }
+    memory = 0;
+    operation = null;
+    error = false;
+
 
     setMemory(value) {
         this.memory = value;
@@ -25,6 +25,13 @@ class Calculator {
         this.operation = null;
     }
 
+    getErrorFlag(){
+        return this.error;
+    }
+
+    setErrorFlag(flag) {
+        this.error = Boolean(flag);
+    }
 }
 
 export default new Calculator();

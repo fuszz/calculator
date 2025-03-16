@@ -1,5 +1,6 @@
 import calculator from "./calculator.js";
 import calcScreen from "./screen.js";
+import history from "./history.js";
 
 export function addButtonEvents() {
     addNumberButtonEvents();
@@ -12,9 +13,9 @@ function addNumberButtonEvents() {
         button.addEventListener('click', (event) => calcScreen.addCipher(event));
     }
 }
+
 function addOperatorButtonEvents() {
     document.getElementById('dot').addEventListener('click', () => {calcScreen.addDot()});
-
     document.getElementById('plus').addEventListener('click', chooseOperator);
     document.getElementById('minus').addEventListener('click', chooseOperator);
     document.getElementById('asterisk').addEventListener('click', chooseOperator);
@@ -27,22 +28,46 @@ function addOperatorButtonEvents() {
 }
 
 function chooseOperator(event){
+    calcScreen.checkErrorFlag();
     calculator.setMemory(calcScreen.getValue());
-    console.log(calcScreen.getValue());
     calculator.setOperation(event.target.innerText);
     calcScreen.clear();
 }
 
 function performSqrt(){
+    calcScreen.checkErrorFlag();
     let value = calcScreen.getValue();
     const result = value < 0 ? "Error" : Math.sqrt(value);
 
     calcScreen.clear();
     calcScreen.setValue(result);
     calculator.defaultState();
+    if(result === "Error") calculator.setErrorFlag(true);
+    archiveSqrtMessage(value, result);
+}
+
+function archiveSqrtMessage(a, result){
+    if (result === "Error"){
+        history.addError('\u221a '+ Number(a) + '\u2192 Error');
+    } else {
+        history.addOperation('\u221a '+ Number(a) + ' = ' + Number(result));
+    }
+}
+
+function archiveMessage(a, b, result, operator){
+    if (result === "Error"){
+        history.addError(Number(a) + ' '
+                            + String(operator) + ' '
+                            + Number(b) + '\u2192 Error');
+    } else {
+        history.addOperation(Number(a) + ' '
+            + String(operator) + ' '
+            + Number(b) + ' = ' + Number(result));
+    }
 }
 
 function performMath(){
+    calcScreen.checkErrorFlag();
     let a = Number(calculator.getMemory());
     let b = Number(calcScreen.getValue());
     let result;
@@ -50,13 +75,14 @@ function performMath(){
     if (calculator.getOperation() === '*') result = a*b;
     else if (calculator.getOperation() === '+') result = a+b;
     else if(calculator.getOperation() === '-') result = a-b;
-    else if(calculator.getOperation() === '/') result = b < 0 ? "Error" : a/b;
+    else if(calculator.getOperation() === '/') result = (Number(b) === 0) ? "Error" : (a/b);
     else if(calculator.getOperation() == null) {
-        result = b;
-        calculator.defaultState(result);
+        return;
     }
+    archiveMessage(a, b, result, calculator.getOperation());
     calculator.defaultState();
     calcScreen.setValue(result);
+    if(result === "Error" || result === String(NaN)) calculator.setErrorFlag(true);
 }
 
 
